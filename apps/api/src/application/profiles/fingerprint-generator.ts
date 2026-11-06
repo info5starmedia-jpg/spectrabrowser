@@ -23,6 +23,17 @@ const SCREENS: ReadonlyArray<readonly [number, number]> = [
 /** Weighted like the real desktop market: 8 and 16 GB dominate. */
 const MEMORY: ReadonlyArray<4 | 8 | 16 | 32> = [4, 8, 8, 8, 16, 16, 32];
 
+/**
+ * Windows-only cap, from an independent measurement published by the Fury
+ * team (2026-11-05, Chrome 157, Windows build box, fresh seeds):
+ * deviceMemory 16 scored 0.82–0.94 on demo.fingerprint.com and was flagged
+ * 3 of 3; 8 GB scored 0.09–0.12 and was flagged 0 of 6. On Chrome 155 the
+ * same 16 scored 0.10. Why 157 minds 16 is an open question, even to them.
+ * Until it is understood, new Windows identities draw from 4/8 GB only.
+ * (Measurement/idea only — Fury is AGPL-3.0; no code was copied.)
+ */
+const MEMORY_WINDOWS: ReadonlyArray<4 | 8> = [4, 8, 8, 8];
+
 /** One well-mixed fraction in [0, 1) from a seed (Mulberry32). */
 export function seedFraction(seed: number, salt: number): number {
   let m = (seed + salt) >>> 0;
@@ -42,7 +53,7 @@ export function generateIdentity(
   seed: number = randomInt(1, 2 ** 31 - 1),
 ): FingerprintIdentity {
   const [w, h] = pick(SCREENS, seed, 0x9e3779b9);
-  const mem = pick(MEMORY, seed, 0x85ebca6b);
+  const mem = pick(platform === "windows" ? MEMORY_WINDOWS : MEMORY, seed, 0x85ebca6b);
   // Core counts that actually ship with each memory tier: a 4 GB machine
   // claiming 32 cores is a detectable incoherence.
   const coresForMem: Record<number, ReadonlyArray<number>> = {

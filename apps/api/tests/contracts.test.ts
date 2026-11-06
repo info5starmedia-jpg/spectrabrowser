@@ -56,6 +56,17 @@ describe("fingerprint generator", () => {
     }
   });
 
+  it("caps Windows deviceMemory at 8 GB (Chrome 157 detection measurement)", () => {
+    // Independent measurement (Fury team, 2026-11-05): on Chrome 157, fresh
+    // Windows profiles with deviceMemory 16 were flagged 3/3 by
+    // demo.fingerprint.com while 8 GB was flagged 0/6. Windows identities
+    // must stay at 4/8 GB until this is understood.
+    for (let seed = 1; seed <= 500; seed++) {
+      const i = generateIdentity("windows", "UTC", "en-US", seed);
+      expect(i.deviceMemoryGb).toBeLessThanOrEqual(8);
+    }
+  });
+
   it("seedFraction stays in [0,1)", () => {
     for (let s = 0; s < 1000; s += 7) {
       const f = seedFraction(s, 123);
